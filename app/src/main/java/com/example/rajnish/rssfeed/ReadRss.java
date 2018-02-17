@@ -2,31 +2,22 @@ package com.example.rajnish.rssfeed;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.widget.Toast;
 
 import com.orhanobut.hawk.Hawk;
-import com.orhanobut.hawk.NoEncryption;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -46,6 +37,7 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
     RecyclerView recyclerView;
     URL url;
 
+SwipeRefreshLayout srl;
     MainActivity mainActivity=new MainActivity();
 
     public ReadRss(Context context, RecyclerView recyclerView) {
@@ -69,17 +61,6 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... params) {
         //call process xml method to process document we downloaded from getData() method
         feedItems = new ArrayList<>();
-        if(mainActivity.isconnected==0)
-        {
-            //feedItems=Paper.book().read("rss",new ArrayList<FeedItem>());
-            feedItems=Hawk.get("rss");
-            System.out.println(feedItems.get(0).getDescription());
-            FeedsAdapter adapter = new FeedsAdapter(context, feedItems);
-            recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.addItemDecoration(new VerticalSpace(20));
-            recyclerView.setAdapter(adapter);
-        }
-        else
             ProcessXml(Getdata());
 
         return null;
@@ -93,25 +74,6 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         recyclerView.addItemDecoration(new VerticalSpace(20));
         recyclerView.setAdapter(adapter);
-        try
-        {
-            new File("science.txt").delete();
-            FileOutputStream fos=new FileOutputStream("science.txt",true);
-            ObjectOutputStream oos=new ObjectOutputStream(fos);
-            store sd=new store(title,description,date);
-            oos.writeObject(sd);
-            oos.close();
-            fos.close();
-
-        }
-        catch (FileNotFoundException e )
-        {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
     }
 
     // In this method we will process Rss feed  document we downloaded to parse useful information from it
