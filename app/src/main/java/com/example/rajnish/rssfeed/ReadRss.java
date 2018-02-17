@@ -2,9 +2,14 @@ package com.example.rajnish.rssfeed;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.widget.Toast;
+
+import com.orhanobut.hawk.Hawk;
+import com.orhanobut.hawk.NoEncryption;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -20,13 +25,18 @@ import java.io.ObjectOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import io.paperdb.Paper;
+
 /**
  * Created by Rajnish on 16-02-2018.
  */
+
 public class ReadRss extends AsyncTask<Void, Void, Void> {
     Context context;
   ArrayList<String> title,description,date;
@@ -36,9 +46,12 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
     RecyclerView recyclerView;
     URL url;
 
+    MainActivity mainActivity=new MainActivity();
+
     public ReadRss(Context context, RecyclerView recyclerView) {
         this.recyclerView = recyclerView;
         this.context = context;
+        Paper.init(context);
         progressDialog = new ProgressDialog(context);
         progressDialog.setMessage("Loading...");
     }
@@ -46,7 +59,7 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
     //before fetching of rss statrs show progress to user
     @Override
     protected void onPreExecute() {
-        progressDialog.show();
+//        progressDialog.show();
         super.onPreExecute();
     }
 
@@ -55,7 +68,19 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
     @Override
     protected Void doInBackground(Void... params) {
         //call process xml method to process document we downloaded from getData() method
-        ProcessXml(Getdata());
+        feedItems = new ArrayList<>();
+        if(mainActivity.isconnected==0)
+        {
+            //feedItems=Paper.book().read("rss",new ArrayList<FeedItem>());
+            feedItems=Hawk.get("rss");
+            System.out.println(feedItems.get(0).getDescription());
+            FeedsAdapter adapter = new FeedsAdapter(context, feedItems);
+            recyclerView.setLayoutManager(new LinearLayoutManager(context));
+            recyclerView.addItemDecoration(new VerticalSpace(20));
+            recyclerView.setAdapter(adapter);
+        }
+        else
+            ProcessXml(Getdata());
 
         return null;
     }
@@ -91,8 +116,9 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
 
     // In this method we will process Rss feed  document we downloaded to parse useful information from it
     public void ProcessXml(Document data) {
+
         if (data != null) {
-            feedItems = new ArrayList<>();
+
             Element root = data.getDocumentElement();
             Node channel = root.getChildNodes().item(1);
             NodeList items = channel.getChildNodes();
@@ -120,9 +146,14 @@ public class ReadRss extends AsyncTask<Void, Void, Void> {
                     }
                     feedItems.add(item);
 
-
                 }
             }
+
+            //Paper.book().write("rss",feedItems);
+            if(Hawk.contains("rss"))
+                Hawk.delete("rss");
+            Hawk.put("rss",feedItems);
+
         }
     }
 

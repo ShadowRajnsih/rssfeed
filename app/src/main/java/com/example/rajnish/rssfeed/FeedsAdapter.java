@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
@@ -25,6 +26,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
     ArrayList<FeedItem> feedItems;
     Context context;
     private WebView mwebView;
+    MainActivity mainActivity=new MainActivity();
 
     public FeedsAdapter(Context context, ArrayList<FeedItem> feedItems) {
         this.feedItems = feedItems;
@@ -45,14 +47,19 @@ public class FeedsAdapter extends RecyclerView.Adapter<FeedsAdapter.MyViewHolder
         holder.Title.setText(current.getTitle());
         holder.Description.setText(current.getDescription());
         holder.Date.setText(current.getPubDate());
-        Picasso.with(context).load(current.getThumbnailUrl()).into(holder.Thumbnail);
+        if(mainActivity.isconnected==1)
+            Picasso.with(context).load(current.getThumbnailUrl()).into(holder.Thumbnail);
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent=new Intent(context,Main2Activity.class);
-                intent.putExtra("URL",current.getLink());
-                context.startActivity(intent);
+                if(mainActivity.isconnected==0)
+                    Toast.makeText(view.getContext(),"No internet",Toast.LENGTH_LONG).show();
+                else {
+                    Intent intent = new Intent(context, Main2Activity.class);
+                    intent.putExtra("URL", current.getLink());
+                    context.startActivity(intent);
+                }
             }
         });
 
